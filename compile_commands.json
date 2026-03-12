@@ -1,0 +1,61 @@
+[
+  {
+    "file": "moonlanding.cpp",
+    "arguments": [
+      "g++",
+      "moonlanding.cpp",
+      "-I/nix/store/iszjy665zia2fm46m0gcxnjshlqmp300-allegro-4.4.3.1/include",
+      "-o",
+      "moonlanding"
+    ],
+    "directory": "/home/linuxero/Documents/moonlanding",
+    "output": "moonlanding"
+  },
+  {
+    "file": "moonlanding.cpp",
+    "arguments": [
+      "g++",
+      "-fPIC",
+      "-fstack-clash-protection",
+      "-O2",
+      "-U_FORTIFY_SOURCE",
+      "-Wformat",
+      "-Wformat-security",
+      "-Werror=format-security",
+      "-fzero-call-used-regs=used-gpr",
+      "-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_EXTENSIVE",
+      "-fstack-protector-strong",
+      "--param",
+      "-fno-strict-overflow",
+      "-fno-omit-frame-pointer",
+      "-mno-omit-leaf-frame-pointer",
+      "moonlanding.cpp",
+      "-I/nix/store/iszjy665zia2fm46m0gcxnjshlqmp300-allegro-4.4.3.1/include",
+      "-o",
+      "moonlanding",
+      "-U_FORTIFY_SOURCE",
+      "-D_FORTIFY_SOURCE=3",
+      "-B/nix/store/l0l2ll1lmylczj1ihqn351af2kyp5x19-glibc-2.42-51/lib/",
+      "-idirafter",
+      "/nix/store/j8irrc0mpx029dw0rmadsjylg7h31ync-glibc-2.42-51-dev/include",
+      "-idirafter",
+      "/nix/store/sca0pf46jmxva40qahkcwys5c1lvk6n2-gcc-15.2.0/lib/gcc/x86_64-unknown-linux-gnu/15.2.0/include-fixed",
+      "-B/nix/store/ihpdbhy4rfxaixiamyb588zfc3vj19al-gcc-15.2.0-lib/lib",
+      "-frandom-seed=9bcsvvzck8",
+      "-isystem",
+      "/nix/store/iszjy665zia2fm46m0gcxnjshlqmp300-allegro-4.4.3.1/include",
+      "-isystem",
+      "/nix/store/fx7ny2ayz9plvr8xi766rp4nv5wiyyjn-codeblocks-25.03/include",
+      "-isystem",
+      "/nix/store/iszjy665zia2fm46m0gcxnjshlqmp300-allegro-4.4.3.1/include",
+      "-isystem",
+      "/nix/store/fx7ny2ayz9plvr8xi766rp4nv5wiyyjn-codeblocks-25.03/include",
+      "-isystem",
+      "/nix/store/iszjy665zia2fm46m0gcxnjshlqmp300-allegro-4.4.3.1/include",
+      "-isystem",
+      "/nix/store/fx7ny2ayz9plvr8xi766rp4nv5wiyyjn-codeblocks-25.03/include"
+    ],
+    "directory": "/home/linuxero/Documents/moonlanding",
+    "output": "moonlanding"
+  }
+]

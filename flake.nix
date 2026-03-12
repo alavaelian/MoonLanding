@@ -1,0 +1,23 @@
+{
+  description = "Allegro 4 development shell";
+
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
+  outputs = { self, nixpkgs }:
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs { inherit system; };
+    in {
+      devShells.${system}.default = pkgs.mkShell {
+        buildInputs = [
+          pkgs.gcc
+          pkgs.pkg-config
+          pkgs.allegro
+          pkgs.codeblocks
+          pkgs.bear
+          pkgs.clang-tools 
+          pkgs.pkg-config
+        ];
+      };
+    };
+}
