@@ -27,3 +27,5 @@ A pre-compiled binary is already provided. Just run:
 ## 📸 Screenshot
 
 ![MoonLanding gameplay](assets/screenshot.bmp)
+![MoonLanding gameplay](assets/screenshot1.bmp)
+
