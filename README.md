@@ -24,3 +24,6 @@ A pre-compiled binary is already provided. Just run:
 ```bash
 ./moonlanding
 ```
+## 📸 Screenshot
+
+![MoonLanding gameplay](assets/screenshot.png)
