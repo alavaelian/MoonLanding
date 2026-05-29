@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoonLanding</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: #0a0a10;
+    color: #ffffff;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+#title {
+    font-size: 1.4em;
+    letter-spacing: 6px;
+    margin-bottom: 8px;
+    color: #ffffff;
+    text-shadow: 0 0 8px #ffffff33;
+}
+#subtitle {
+    font-size: 0.7em;
+    color: #888888;
+    margin-bottom: 12px;
+    letter-spacing: 3px;
+}
+#canvas-wrap {
+    border: 1px solid #444444;
+    box-shadow: 0 0 15px #ffffff0a, 0 0 40px #0000ff08;
+    position: relative;
+    background: #000;
+}
+canvas { display: block; }
+#status-bar {
+    margin-top: 10px;
+    font-size: 0.7em;
+    color: #aaaaaa;
+    height: 20px;
+}
+#controls {
+    margin-top: 8px;
+    font-size: 0.65em;
+    color: #777777;
+    letter-spacing: 1px;
+}
+#footer {
+    margin-top: 16px;
+    font-size: 0.55em;
+    color: #555555;
+    letter-spacing: 2px;
+}
+#progress {
+    width: 300px; height: 4px;
+    -webkit-appearance: none; appearance: none;
+    border: 1px solid #444444; background: #000;
+    margin-top: 10px;
+}
+#progress::-webkit-progress-bar { background: #000; }
+#progress::-webkit-progress-value { background: #ffffff; }
+#progress::-moz-progress-bar { background: #ffffff; }
+.spinner {
+    display: none; width: 20px; height: 20px;
+    border: 2px solid #333333; border-top: 2px solid #ffffff;
+    border-radius: 50%; animation: spin 1s linear infinite;
+    margin: 10px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="title">[ MOONLANDING ]</div>
+<div id="subtitle">LUNAR MODULE CONTROL SYSTEM // v2.0</div>
+<div id="canvas-wrap">
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex="1"></canvas>
+</div>
+<div class="spinner" id="spinner"></div>
+<progress value="0" max="100" id="progress" hidden></progress>
+<div id="status-bar">&nbsp;</div>
+<div id="controls">↑ THRUST &nbsp; ← → LATERAL &nbsp; A CONTINUE &nbsp; ESC EXIT</div>
+<div id="footer">POWERED BY EMSCRIPTEN</div>
+
+<script type='text/javascript'>
+var statusElement = document.getElementById('status-bar');
+var progressElement = document.getElementById('progress');
+var spinnerElement = document.getElementById('spinner');
+var canvasElement = document.getElementById('canvas');
+
+var Module = {
+    print: (function() {
+        return function(text) {
+            if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+            console.log(text);
+        };
+    })(),
+    canvas: canvasElement,
+    setStatus: function(text) {
+        if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+        if (text === Module.setStatus.last.text) return;
+        var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+        var now = Date.now();
+        if (m && now - Module.setStatus.last.time < 30) return;
+        Module.setStatus.last.time = now;
+        Module.setStatus.last.text = text;
+        if (m) {
+            text = 'LOADING...';
+            progressElement.value = parseInt(m[2])*100/parseInt(m[4]);
+            progressElement.max = 100;
+            progressElement.hidden = false;
+            spinnerElement.style.display = 'block';
+        } else {
+            progressElement.value = 0;
+            progressElement.max = 100;
+            progressElement.hidden = true;
+            if (!text) {
+                spinnerElement.style.display = 'none';
+                statusElement.innerHTML = 'SYSTEM READY';
+            }
+        }
+        statusElement.innerHTML = text;
+    },
+    totalDependencies: 0,
+    monitorRunDependencies: function(left) {
+        this.totalDependencies = Math.max(this.totalDependencies, left);
+        Module.setStatus(left ? 'INITIALIZING... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : '');
+    }
+};
+Module.setStatus('BOOTING SYSTEM...');
+window.onerror = function() {
+    Module.setStatus('SYSTEM ERROR');
+    spinnerElement.style.display = 'none';
+};
+
+canvasElement.addEventListener('click', function() { this.focus(); });
+setTimeout(function() { canvasElement.focus(); }, 500);
+</script>
+{{{ SCRIPT }}}
+</body>
+</html>

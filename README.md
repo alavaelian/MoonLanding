@@ -1,10 +1,8 @@
-
-
-
-
 # 🌙 MoonLanding
 
-A retro lunar lander game built in C++ with Allegro 4, based on the tutorials by [Deivid Coptero](https://www.youtube.com/@deividcoptero) and expanded with additional levels, mechanics, and polish.
+A retro lunar lander game built in C++ with Allegro 4, ported to Allegro 5 with native desktop and web (WebAssembly) support. Based on the tutorials by [Deivid Coptero](https://www.youtube.com/@deividcoptero) and expanded with additional levels, mechanics, and polish.
+
+🎮 **[Play in your browser](https://alavaelian.github.io/MoonLanding/)** *(coming soon)*
 
 ---
 
@@ -12,7 +10,7 @@ A retro lunar lander game built in C++ with Allegro 4, based on the tutorials by
 
 The goal is simple: pilot a spacecraft through obstacles and land it on a small platform without crashing. The game has 10 levels with progressively harder layouts.
 
-Everything is drawn with Allegro's primitive functions — lines, rectangles, circles, and triangles. No sprites, no external assets for the game itself.
+Everything is drawn with primitive functions — lines, rectangles, circles, and triangles. No sprites, no external assets for the game itself.
 
 ---
 
@@ -24,13 +22,16 @@ Everything is drawn with Allegro's primitive functions — lines, rectangles, ci
 - Static and moving circles with gravitational fields that pull the ship
 - Procedural explosion animation using rotating line segments
 - Reactive engine audio — sound turns on and off with thruster input
-- Fuel system — using multiple thrusters drains fuel faster
+- Fuel system — using multiple thrusters drains fuel faster, blinking warning below 18%
 - Animated starfield background
+- Resolution scaling via Allegro 5 transformations (maintains 740×500 aspect ratio)
+- Retro terminal-style frame around the viewport
 - Victory and game over screens
-- 60 FPS game loop using Allegro's hardware timer
-- More polished hitbox with five rectangles instead of tree
-- polished the colisions with the base.
-- Binary under 100 KB
+- State machine architecture (compatible with emscripten main loop)
+- Web Audio API integration for browser version
+- 60 FPS game loop
+- More polished hitbox with five rectangles instead of three
+- Binary under 100 KB (native)
 
 ---
 
@@ -54,9 +55,9 @@ Everything is drawn with Allegro's primitive functions — lines, rectangles, ci
 | 2–3 | Floor and ceiling triangles |
 | 4–6 | More triangles, tighter gaps |
 | 7 | Triangles + falling rocks |
-| 8 | Large rectangular blocks |
+| 8 | Large rectangular blocks (tunnel) |
 | 9 | Static circles with gravity fields |
-| 10 | Moving circles with orbits |
+| 10 | Moving circles with gravitational orbits |
 
 ---
 
@@ -80,22 +81,129 @@ Landing is valid only when vertical speed `vy < 1.0`. Higher speed triggers an e
 
 ---
 
+## Port History
+
+### Original: Allegro 4 (`moonlanding.cpp`)
+
+The game was originally written with the Allegro 4 API using a classic while-loop architecture, `key[]` array for keyboard input, `BITMAP*` for double-buffered rendering, and `play_sample()` for audio.
+
+### Port: Allegro 5 (`main_a5.cpp`)
+
+The game was rewritten with the Allegro 5 API, implementing:
+
+- **State machine**: `CLICK_TO_START` → `SPLASH_ESPERA` → `LIMPIEZA` → `JUGANDO` → `NIVEL_COMPLETADO` / `EXPLOSION` / `VICTORIA`
+- **Drawing API**: `al_draw_line()`, `al_draw_filled_triangle()`, `al_draw_text()`, etc.
+- **Keyboard polling**: `al_get_keyboard_state()` + `al_key_down()` each frame
+- **Audio**: `ALLEGRO_SAMPLE` + `al_play_sample()` / `al_stop_sample()`
+- **Scaling**: `al_scale_transform()` + `al_translate_transform()` for resolution-independent rendering
+
+### Web: Emscripten + WebAssembly
+
+Allegro 5 was compiled from source for emscripten using the SDL2 backend (`ALLEGRO_SDL=ON`). Challenges resolved:
+
+- **Audio**: The `allegro_audio` addon doesn't compile for emscripten/SDL. Disabled and replaced with **Web Audio API** via `--js-library audio.js`
+- **WebGL**: Requires WebGL 2 (`MIN_WEBGL_VERSION=2`) for Allegro 5's renderer
+- **AudioContext**: Browsers block auto-play. Added a "Click to Start" screen that initializes the AudioContext on first user gesture
+- **NixOS**: Emscripten cache must point to a writable directory (`EM_CACHE=$HOME/.emscripten_cache`)
+
+---
+
 ## Building
 
-A Nix flake is included for a reproducible development environment with Allegro 4.
+### Requirements
+
+- GCC/G++ and pkg-config
+- Allegro 5 (with addons: primitives, font, audio, acodec, image)
+- For web: Emscripten 3.1.47, CMake, Node.js
+
+A Nix flake is included for a reproducible development environment:
 
 ```bash
-# Enter dev environment
 nix develop
+```
 
-# Compile
+### Native (Allegro 4 — original)
+
+```bash
 g++ moonlanding.cpp $(pkg-config --cflags --libs allegro) -lm -o moonlanding
-
-# Run
 ./moonlanding
 ```
 
-A pre-compiled binary for Linux is also included.
+### Native (Allegro 5 — port)
+
+```bash
+g++ main_a5.cpp -o moonlanding_a5 \
+    $(pkg-config --cflags --libs allegro-5 allegro_primitives-5 \
+    allegro_font-5 allegro_audio-5 allegro_acodec-5 allegro_image-5) -lm
+./moonlanding_a5
+```
+
+### Web (Emscripten)
+
+**1. Set up emscripten cache (NixOS):**
+
+```bash
+export EM_CACHE=$HOME/.emscripten_cache
+mkdir -p $EM_CACHE
+```
+
+**2. Build Allegro 5 for emscripten:**
+
+```bash
+git clone https://github.com/liballeg/allegro5.git
+cd allegro5 && git checkout master
+mkdir build_em && cd build_em
+emcmake cmake .. \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DALLEGRO_SDL=ON \
+    -DCMAKE_C_FLAGS="-s USE_SDL=2 -msimd128" \
+    -DCMAKE_CXX_FLAGS="-s USE_SDL=2 -msimd128" \
+    -DWANT_EXAMPLES=OFF -DWANT_TESTS=OFF \
+    -DWANT_DEMO=OFF -DWANT_DOCS=OFF -DWANT_AUDIO=OFF \
+    -DCMAKE_THREAD_LIBS_INIT="" \
+    -DCMAKE_HAVE_THREADS_LIBRARY=1 \
+    -DCMAKE_USE_PTHREADS_INIT=1 \
+    -DTHREADS_PREFER_PTHREAD_FLAG=OFF \
+    -DSDL2_INCLUDE_DIR="$EM_CACHE/sysroot/include" \
+    -DSDL2_LIBRARY="-s USE_SDL=2"
+emmake make -j$(nproc)
+```
+
+**3. Build the game:**
+
+```bash
+emcc main_a5.cpp -o moonlanding.html \
+    --shell-file shell.html \
+    -I ../allegro5/include \
+    -I ../allegro5/build_em/include \
+    -I ../allegro5/addons/primitives \
+    -I ../allegro5/addons/font \
+    -I ../allegro5/addons/image \
+    -I ../allegro5/addons/main \
+    -L ../allegro5/build_em/lib \
+    -lallegro_primitives -lallegro_font -lallegro_image \
+    -lallegro_main -lallegro \
+    --js-library audio.js \
+    -s USE_SDL=2 -msimd128 \
+    -s ALLOW_MEMORY_GROWTH=1 \
+    -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2 \
+    -s FULL_ES3=1 \
+    --preload-file splash_nix.bmp \
+    --preload-file victoria_art.bmp \
+    --preload-file pdpsong.wav \
+    --preload-file sonidostart.wav \
+    --preload-file thrust.wav \
+    --preload-file boom.wav \
+    --preload-file gamesong.wav \
+    --preload-file victory_fixed.wav
+```
+
+**4. Serve locally:**
+
+```bash
+npx serve .
+# Open http://localhost:3000/moonlanding.html
+```
 
 ---
 
@@ -103,17 +211,24 @@ A pre-compiled binary for Linux is also included.
 
 ```
 moonlanding/
-├── moonlanding.cpp       # Full source (single file)
-├── moonlanding           # Pre-compiled Linux binary
+├── moonlanding.cpp       # Original Allegro 4 source (10 levels)
+├── main_a5.cpp           # Allegro 5 port (native + web)
+├── audio.js              # Web Audio API library for emscripten
+├── shell.html            # Custom HTML template for web version
 ├── flake.nix             # Nix dev environment
-├── splash_nix.bmp        # Intro screen
-├── victoria_art.bmp      # Victory screen
-├── pdpsong.wav           # Intro music (PDP-1, 1962)
+├── .gitignore
+├── README.md
+│
+├── splash_nix.bmp        # Intro screen artwork
+├── victoria_art.bmp      # Victory screen artwork
+├── pdpsong.wav           # Intro music (PDP-1, MIT 1962)
 ├── gamesong.wav          # Background music
+├── sonidostart.wav       # Level start sound
 ├── thrust.wav            # Engine sound
 ├── boom.wav              # Explosion sound
-├── sonidostart.wav       # Start sound
-└── victory_fixed.wav     # Victory music
+├── victory_fixed.wav     # Victory music
+└── assets/
+    └── screenshot.png    # Screenshots
 ```
 
 ---
@@ -129,18 +244,22 @@ The intro track is a piece performed by a **PDP-1 at MIT in 1962**, using the **
 | | |
 |--|--|
 | Language | C++ |
-| Library | Allegro 4 |
-| Resolution | 740 × 500 px |
+| Libraries | Allegro 4 (original), Allegro 5 (port) |
+| Web stack | Emscripten, WebAssembly, SDL2, Web Audio API |
+| Resolution | 740 × 500 px (scales to any display) |
 | Target FPS | 60 |
-| Binary size | < 100 KB |
-| Platform | Linux / NixOS |
-| Rendering | Software, double-buffered |
+| Binary size | < 100 KB (native) |
+| Platform | Linux / NixOS / Web |
+| Rendering | OpenGL (native), WebGL 2 (web) |
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
-![MoonLanding gameplay](assets/screenshot.bmp)
-![MoonLanding gameplay](assets/screenshot1.bmp)
+![MoonLanding gameplay](assets/screenshot.png)
 
+---
 
+## License
+
+GPL-3.0
