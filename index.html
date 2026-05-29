@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>MoonLanding</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -16,6 +16,9 @@ body {
     justify-content: center;
     min-height: 100vh;
     overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
 }
 #title {
     font-size: 1.4em;
@@ -43,7 +46,7 @@ canvas { display: block; }
     color: #aaaaaa;
     height: 20px;
 }
-#controls {
+#controls-info {
     margin-top: 8px;
     font-size: 0.65em;
     color: #777777;
@@ -71,6 +74,65 @@ canvas { display: block; }
     margin: 10px auto;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Touch Controls ── */
+#touch-controls {
+    display: none;
+    margin-top: 12px;
+    width: 100%;
+    max-width: 740px;
+    padding: 0 10px;
+}
+#touch-controls .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.touch-btn {
+    width: 70px;
+    height: 70px;
+    border: 2px solid #555;
+    border-radius: 12px;
+    background: #1a1a25;
+    color: #ccc;
+    font-size: 24px;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.05s;
+}
+.touch-btn:active, .touch-btn.pressed {
+    background: #333344;
+    border-color: #999;
+    color: #fff;
+}
+.touch-btn.wide {
+    width: 90px;
+    font-size: 18px;
+    height: 55px;
+}
+#dpad {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+#dpad-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+}
+
+@media (pointer: coarse), (max-width: 800px) {
+    #touch-controls { display: block; }
+    #controls-info { display: none; }
+    #title { font-size: 1em; }
+    #subtitle { font-size: 0.55em; }
+}
 </style>
 </head>
 <body>
@@ -82,7 +144,25 @@ canvas { display: block; }
 <div class="spinner" id="spinner"></div>
 <progress value="0" max="100" id="progress" hidden></progress>
 <div id="status-bar">&nbsp;</div>
-<div id="controls">↑ THRUST &nbsp; ← → LATERAL &nbsp; A CONTINUE &nbsp; ESC EXIT</div>
+<div id="controls-info">↑ THRUST &nbsp; ← → LATERAL &nbsp; A CONTINUE &nbsp; ESC EXIT</div>
+
+<div id="touch-controls">
+    <div class="row">
+        <div id="dpad">
+            <button class="touch-btn" data-key="ArrowLeft" data-code="37">◀</button>
+            <div id="dpad-col">
+                <button class="touch-btn" data-key="ArrowUp" data-code="38">▲</button>
+                <button class="touch-btn" data-key="ArrowDown" data-code="40">▼</button>
+            </div>
+            <button class="touch-btn" data-key="ArrowRight" data-code="39">▶</button>
+        </div>
+        <div style="display:flex; gap:8px;">
+            <button class="touch-btn wide" data-key="a" data-code="65">A</button>
+            <button class="touch-btn wide" data-key="Escape" data-code="27">ESC</button>
+        </div>
+    </div>
+</div>
+
 <div id="footer">POWERED BY EMSCRIPTEN</div>
 
 <script type='text/javascript'>
@@ -138,6 +218,54 @@ window.onerror = function() {
 
 canvasElement.addEventListener('click', function() { this.focus(); });
 setTimeout(function() { canvasElement.focus(); }, 500);
+
+// ── Touch button → keyboard event ──
+document.querySelectorAll('.touch-btn').forEach(function(btn) {
+    function sendKey(type) {
+        var key = btn.getAttribute('data-key');
+        var code = parseInt(btn.getAttribute('data-code'));
+        var ev = new KeyboardEvent(type, {
+            key: key,
+            code: key,
+            keyCode: code,
+            which: code,
+            bubbles: true
+        });
+        document.dispatchEvent(ev);
+        canvasElement.dispatchEvent(ev);
+    }
+
+    btn.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        btn.classList.add('pressed');
+        sendKey('keydown');
+    });
+    btn.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        btn.classList.remove('pressed');
+        sendKey('keyup');
+    });
+    btn.addEventListener('touchcancel', function(e) {
+        btn.classList.remove('pressed');
+        sendKey('keyup');
+    });
+    // Mouse fallback
+    btn.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        btn.classList.add('pressed');
+        sendKey('keydown');
+    });
+    btn.addEventListener('mouseup', function(e) {
+        btn.classList.remove('pressed');
+        sendKey('keyup');
+    });
+    btn.addEventListener('mouseleave', function(e) {
+        if (btn.classList.contains('pressed')) {
+            btn.classList.remove('pressed');
+            sendKey('keyup');
+        }
+    });
+});
 </script>
 <script async type="text/javascript" src="moonlanding.js"></script>
 </body>
