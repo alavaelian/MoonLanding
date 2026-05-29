@@ -256,7 +256,7 @@ The intro track is a piece performed by a **PDP-1 at MIT in 1962**, using the **
 
 ## Screenshots
 
-![MoonLanding gameplay](assets/screenshot.png)
+![MoonLanding gameplay](assets/screenshot.bmp)
 
 ---
 
