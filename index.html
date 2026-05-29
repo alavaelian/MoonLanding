@@ -53,7 +53,7 @@ canvas { display: block; }
     letter-spacing: 1px;
 }
 #footer {
-    margin-top: 16px;
+    margin-top: 12px;
     font-size: 0.55em;
     color: #555555;
     letter-spacing: 2px;
@@ -78,25 +78,25 @@ canvas { display: block; }
 /* ── Touch Controls ── */
 #touch-controls {
     display: none;
-    margin-top: 12px;
+    margin-top: 10px;
     width: 100%;
-    max-width: 740px;
-    padding: 0 10px;
+    max-width: 400px;
+    padding: 0 15px;
 }
-#touch-controls .row {
+.touch-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: center;
+    gap: 10px;
     margin-bottom: 8px;
 }
 .touch-btn {
-    width: 70px;
-    height: 70px;
+    width: 75px;
+    height: 60px;
     border: 2px solid #555;
-    border-radius: 12px;
+    border-radius: 10px;
     background: #1a1a25;
     color: #ccc;
-    font-size: 24px;
+    font-size: 22px;
     font-family: 'Courier New', monospace;
     display: flex;
     align-items: center;
@@ -110,28 +110,18 @@ canvas { display: block; }
     border-color: #999;
     color: #fff;
 }
-.touch-btn.wide {
-    width: 90px;
-    font-size: 18px;
-    height: 55px;
-}
-#dpad {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-}
-#dpad-col {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    align-items: center;
+.touch-btn.small {
+    width: 65px;
+    height: 45px;
+    font-size: 14px;
 }
 
 @media (pointer: coarse), (max-width: 800px) {
     #touch-controls { display: block; }
     #controls-info { display: none; }
-    #title { font-size: 1em; }
-    #subtitle { font-size: 0.55em; }
+    #title { font-size: 1em; margin-bottom: 4px; }
+    #subtitle { font-size: 0.5em; margin-bottom: 6px; }
+    #footer { margin-top: 8px; }
 }
 </style>
 </head>
@@ -147,19 +137,14 @@ canvas { display: block; }
 <div id="controls-info">↑ THRUST &nbsp; ← → LATERAL &nbsp; A CONTINUE &nbsp; ESC EXIT</div>
 
 <div id="touch-controls">
-    <div class="row">
-        <div id="dpad">
-            <button class="touch-btn" data-key="ArrowLeft" data-code="37">◀</button>
-            <div id="dpad-col">
-                <button class="touch-btn" data-key="ArrowUp" data-code="38">▲</button>
-                <button class="touch-btn" data-key="ArrowDown" data-code="40">▼</button>
-            </div>
-            <button class="touch-btn" data-key="ArrowRight" data-code="39">▶</button>
-        </div>
-        <div style="display:flex; gap:8px;">
-            <button class="touch-btn wide" data-key="a" data-code="65">A</button>
-            <button class="touch-btn wide" data-key="Escape" data-code="27">ESC</button>
-        </div>
+    <div class="touch-row">
+        <button class="touch-btn" data-key="ArrowLeft" data-code="37">◀</button>
+        <button class="touch-btn" data-key="ArrowUp" data-code="38">▲</button>
+        <button class="touch-btn" data-key="ArrowRight" data-code="39">▶</button>
+    </div>
+    <div class="touch-row">
+        <button class="touch-btn small" data-key="a" data-code="65">A</button>
+        <button class="touch-btn small" data-key="Escape" data-code="27">ESC</button>
     </div>
 </div>
 
@@ -249,7 +234,6 @@ document.querySelectorAll('.touch-btn').forEach(function(btn) {
         btn.classList.remove('pressed');
         sendKey('keyup');
     });
-    // Mouse fallback
     btn.addEventListener('mousedown', function(e) {
         e.preventDefault();
         btn.classList.add('pressed');
